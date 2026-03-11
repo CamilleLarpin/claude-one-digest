@@ -8,15 +8,18 @@
 ---
 
 ## Now
-- [ ] Define pain point and scope in DESIGN.md — answer: what data sources exist per interface, how is each accessible, what does the daily digest output look like?
+- [ ] Build digest module: group sessions by project, chunk long sessions, call Groq API, render Markdown output
 
 ## Next
-- [ ] Choose stack based on scoping conclusions
-- [ ] Prototype data ingestion for one source (validate access assumptions)
-- [ ] Design analytics pipeline (what Claude analyzes and how output is structured)
+- [ ] Wire digest output to stdout + save to `data/digests/YYYY-MM-DD.md`
+- [ ] Tune prompt quality: test `llama-3.1-8b-instant` → evaluate `llama-3.3-70b-versatile`
+- [ ] Add Claude.ai/Desktop ZIP ingest once first export is available
 
 ## Blocked
 (none)
 
 ## Done (recent — clear periodically)
 - [x] Project initialized — folder, git, GitHub repo, Notion linked
+- [x] DESIGN.md written — problem space, data sources, scope, UC1+UC2, solution approach, normalization schema
+- [x] Stack + LLM decisions recorded in DECISIONS.md
+- [x] Ingest module built (`src/ingest_claude_code.py` + `src/models.py`) — reads ~/.claude/projects/, normalizes schema, filters by --days
