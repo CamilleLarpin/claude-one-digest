@@ -1,14 +1,14 @@
-# [PROJECT NAME] — Claude Context
+# claude-one-digest — Claude Context
 
 > Load tier: hot
 
 @~/.claude/CLAUDE.md
 
 ## Project
-**Purpose**: [one sentence]
-**Status**: [🟢 Running | 🟡 Testing | 🔵 Building | 🔴 Blocked | 🟠 Paused | ⚫ Scoping]
-**Repo**: [url]
-**Stack**: [comma-separated — be specific, e.g. n8n · Claude Sonnet · OpenAI API · Telegram]
+**Purpose**: Merge conversations from Claude Code, Claude Desktop, and claude.ai into a single pipeline and run daily analytics to surface what was learned and achieved.
+**Status**: ⚫ Scoping
+**Repo**: https://github.com/CamilleLarpin/claude-one-digest
+**Stack**: TBD
 
 ## Context Files
 - .claude/CONTEXT.md — current state, architecture, file structure, key dependencies
@@ -18,12 +18,10 @@
 - .claude/TODOS.md — active milestones, next actions, blocked items
 
 ## Active Constraints
-- [hard rules that Claude must never violate, e.g. zero hallucination]
-- [language rules, e.g. UI copy in French]
-- [architectural constraints, e.g. all data in English, no external API calls]
+- No secrets in repo — all credentials in .env or external secret store
 
 ## Quick Reference
-- [key URLs, workflow IDs, credential pointers — no secrets]
+- Notion: https://www.notion.so/Track-Conversations-for-Learning-Insights-320fef9576f1818389e5faf472504c42
 
 ## Current Focus
-[1-2 sentences: what are we building right now and what's the immediate next action]
+Scoping phase — define pain point, data sources, and access method for each conversation source before choosing stack.

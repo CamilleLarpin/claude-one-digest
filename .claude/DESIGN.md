@@ -1,4 +1,4 @@
-# Design — [PROJECT NAME]
+# Design — claude-one-digest
 
 > CONTAINS: problem space, use cases, user flows, solution approach, non-goals.
 > NOT HERE: implementation details (→ CONTEXT.md), active tasks (→ TODOS.md), tech decisions (→ DECISIONS.md).

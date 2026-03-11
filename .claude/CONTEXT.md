@@ -1,4 +1,4 @@
-# Context — [PROJECT NAME]
+# Context — claude-one-digest
 
 > CONTAINS: current state, architecture overview, file structure, key dependencies.
 > NOT HERE: decisions with rationale (→ DECISIONS.md), todos (→ TODOS.md), solution design (→ DESIGN.md).
@@ -8,30 +8,22 @@
 ---
 
 ## Current State
-**As of**: [YYYY-MM-DD]
-[2-3 sentences: where the project stands right now, what is working, what is not]
+**As of**: 2026-03-11
+Project initialized. Nothing built yet. Scoping the problem: data sources, access methods, and analysis goals to be defined before any technical decisions.
 
 ## Architecture
-[Diagram or description of how components connect. Be specific about data flow.]
-
-```
-[e.g. Webhook → n8n → Claude API → GitHub → response]
-```
+TBD — pending scoping decisions on data access per conversation source.
 
 ## File Structure
 ```
-[project-slug]/
+claude-one-digest/
   .claude/          # context files
-  [src or main folder]/
-  [other key folders]
 ```
 
 ## Key Dependencies
-| Dependency | Version/URL | Purpose |
-|---|---|---|
-| [e.g. n8n] | [self-hosted] | [orchestration] |
+TBD
 
 ## Environment
-- **Dev**: [how to run locally]
-- **Prod**: [where it runs]
-- **Credentials**: [pointer only — e.g. "n8n credentials: OpenAI_Prod"]
+- **Dev**: TBD
+- **Prod**: TBD
+- **Credentials**: TBD
