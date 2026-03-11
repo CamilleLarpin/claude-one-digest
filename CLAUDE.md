@@ -6,7 +6,7 @@
 
 ## Project
 **Purpose**: Merge conversations from Claude Code, Claude Desktop, and claude.ai into a single pipeline and run daily analytics to surface what was learned and achieved.
-**Status**: ⚫ Scoping
+**Status**: 🔵 Building
 **Repo**: https://github.com/CamilleLarpin/claude-one-digest
 **Stack**: TBD
 
@@ -24,4 +24,4 @@
 - Notion: https://www.notion.so/Track-Conversations-for-Learning-Insights-320fef9576f1818389e5faf472504c42
 
 ## Current Focus
-Scoping phase — define pain point, data sources, and access method for each conversation source before choosing stack.
+Building digest module — group sessions by project, call Groq API (llama-3.1-8b-instant), render Markdown output to stdout + store in data/digests/.
