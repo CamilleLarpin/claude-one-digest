@@ -8,13 +8,7 @@
 ---
 
 ## Now
-- [ ] **Build `src/session_recap.py`** — plan defined (2026-03-13):
-  1. Read `data/queue.md`, resolve each entry to the matching `.jsonl` (by date + project slug)
-  2. Extract Q&A turns — strip ritual noise (lines with `/start`, `/commit-push`, `command-name`, `command-message`, `Caveat:`, tool call/result blocks)
-  3. One Claude Haiku call with gold-standard prompt: group by concept, preserve analogies, re-explain in plain language, include triggering question
-  4. Save to `data/digests/YYYY-MM-DD_project-slug.md`
-  5. Mark processed entries done in `queue.md`
-  6. Test against Mar 12 audio-intelligence-pipeline session — compare against manually-produced gold standard
+- [ ] Validate Mar 12 recap quality against gold standard (manual review) — content ✅, format renders well in preview
 
 ## Next
 - [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
@@ -25,6 +19,7 @@
 (none)
 
 ## Done (recent — clear periodically)
+- [x] Built `src/session_recap.py` — queue parser, noise filter, Claude Haiku single-call, save + mark done
 - [x] Switched from Groq to Claude API (claude-haiku-4-5-20251001) for Learnings extraction
 - [x] Removed Status section temporarily — focus on Learnings quality first
 - [x] Fixed missing `{content}` placeholders in EXTRACT_PROMPT and MERGE_PROMPT
