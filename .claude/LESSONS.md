@@ -26,11 +26,59 @@
 
 <!-- Add lessons below as they are discovered. Oldest at top, newest at bottom. -->
 
+## [git] · Rule · git diff hunks start mid-section — project header may not appear before changed lines
+> 2026-03-12 · source: claude-one-digest
+- `git diff` hunks start at the nearest context line before the change, not at the section header — if a `### Project` header is >3 lines above the change, it's outside the hunk and never seen by the parser
+- Parsing `+` lines by scanning for the preceding `### ` line in the diff body silently produces empty results
+- Fix: build a line→project map from the full current file first, then use `@@` hunk offsets to resolve which project each change belongs to
+
+## [llm] · Rule · Groq free tier TPM and TPD limits are per-model and separate
+> 2026-03-12 · source: claude-one-digest
+- `llama-3.3-70b-versatile` free tier: 6000 TPM + 100k TPD — exhausted in one heavy session
+- `llama-3.1-8b-instant` free tier: 6000 TPM + separate daily quota
+- Use 8b-instant as daily driver; reserve 70b for occasional spot-checks; never assume quotas are shared
+
+## [prompt] · Guideline · Word-count chunking is wrong for LLM token limits — use char count
+> 2026-03-12 · source: claude-one-digest
+- `CHUNK_WORD_LIMIT = 6000` words still produced 6585-token requests — words ≠ tokens (~1.3–1.5x ratio)
+- Prompt template overhead (~300 tokens) also counts against the limit
+- Use character-based chunking: `CHUNK_CHAR_LIMIT = 10_000` chars ≈ 2500 tokens, leaving headroom for prompt
+
 ## [ingest] · Note · `history.jsonl` is prompts-only — not the source of truth for Claude Code sessions
 > 2026-03-11 · source: claude-one-digest
 - `~/.claude/history.jsonl` contains only user prompts, truncated for display — no assistant responses, no full content
 - 106 of 108 sessions in `history.jsonl` are already present in `~/.claude/projects/**/*.jsonl` as full transcripts
 - Always use `projects/*.jsonl` for analysis; `history.jsonl` is redundant and less rich
+
+## [llm] · Rule · Small models (8b) need `max_tokens` cap to prevent hallucination loops on list tasks
+> 2026-03-13 · source: claude-one-digest
+- `llama-3.1-8b-instant` generating a flat concept list entered a repetition loop ("versioning versioning versioning...") with no token cap
+- The loop consumes quota, produces garbage output, and can hit rate limits
+- Always set `max_tokens` on Groq calls for open-ended list generation; 400 is sufficient for Phase 1 concept extraction
+
+## [prompt] · Guideline · LLM DROP rules unreliable for small models — use Python post-filter instead
+> 2026-03-13 · source: claude-one-digest
+- `llama-3.1-8b-instant` ignored DROP rules in the MERGE prompt — single-word tokens, path strings, and questions survived after deduplication
+- Small models follow inclusion rules better than exclusion rules; DROP logic adds complexity they can't reliably execute
+- Move deterministic filtering to Python (short entries, slash commands, known noisy tokens); keep the LLM prompt focused on merging and naming
+
+## [prompt] · Rule · Prompt `{content}` placeholder must be present — missing it sends empty context to the LLM
+> 2026-03-13 · source: claude-one-digest
+- Both EXTRACT_PROMPT and MERGE_PROMPT lost their `{content}` placeholder after a manual edit — the LLM received the prompt template with no session data and responded as if no input was provided (e.g. "I don't see the list of concepts yet")
+- The failure is silent: the pipeline runs without error, but output is garbage
+- Always verify `{content}` is present in both the `--- SECTION ---` block and the `.format(content=content)` call; test with `assert '{content}' in PROMPT` if unsure
+
+## [prompt] · Rule · Format example with a literal placeholder name causes the model to output it verbatim
+> 2026-03-13 · source: claude-one-digest
+- `Format:\n- ConceptName` in the prompt caused the model to output `- ConceptName` as the first line of its response
+- The model treats the format example as a template to follow literally, including placeholder text
+- Use a real example that looks like actual output (e.g. `- Docker layer caching`) not a generic label
+
+## [ingest] · Rule · Session char cap must cover the full session — 8000 chars cuts off content that starts later
+> 2026-03-13 · source: claude-one-digest
+- Docker/FastAPI questions in a 30k-char session started at char 11593 — the 8000-char cap silently excluded them all
+- Content order in a session is chronological; important questions can appear anywhere, not just at the start
+- Use 40000 chars as the cap; Claude Haiku's 200k context window makes this safe and cheap
 
 ## [ingest] · Note · Claude Code session duration is unreliable — sessions left open overnight inflate it
 > 2026-03-11 · source: claude-one-digest

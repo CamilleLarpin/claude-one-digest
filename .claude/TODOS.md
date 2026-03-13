@@ -8,18 +8,25 @@
 ---
 
 ## Now
-- [ ] Build digest module: group sessions by project, chunk long sessions, call Groq API, render Markdown output
+- [ ] **REVIEW FROM SCRATCH** — Take a step back. Find the March 12 audio-intelligence-pipeline sessions where Camille learned Docker, ports, FastAPI, Hetzner deployment. Read those conversations. Use them as the gold standard for what the output should look like: what questions were asked, what was learned, how it should be summarised. Redesign the prompts and output format from that example, not from iteration on broken output.
 
 ## Next
-- [ ] Wire digest output to stdout + save to `data/digests/YYYY-MM-DD.md`
-- [ ] Tune prompt quality: test `llama-3.1-8b-instant` → evaluate `llama-3.3-70b-versatile`
+- [ ] Re-add Status section once Learnings is validated (currently removed)
+- [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
 - [ ] Add Claude.ai/Desktop ZIP ingest once first export is available
+- [ ] Consider cron automation (Phase 2) — daily digest at end of day
 
 ## Blocked
 (none)
 
 ## Done (recent — clear periodically)
-- [x] Project initialized — folder, git, GitHub repo, Notion linked
-- [x] DESIGN.md written — problem space, data sources, scope, UC1+UC2, solution approach, normalization schema
-- [x] Stack + LLM decisions recorded in DECISIONS.md
-- [x] Ingest module built (`src/ingest_claude_code.py` + `src/models.py`) — reads ~/.claude/projects/, normalizes schema, filters by --days
+- [x] Switched from Groq to Claude API (claude-haiku-4-5-20251001) for Learnings extraction
+- [x] Removed Status section temporarily — focus on Learnings quality first
+- [x] Fixed missing `{content}` placeholders in EXTRACT_PROMPT and MERGE_PROMPT
+- [x] Raised session char cap 8000 → 40000 — covers full sessions (Docker content was at char 11593)
+- [x] Raised MERGE max_tokens 400 → 2000 — output was being cut mid-response
+- [x] Fixed format example — replaced `- ConceptName` placeholder with real example to prevent literal output
+- [x] Validated Phase 1 on Docker/FastAPI session — correct questions extracted
+- [x] Validated Phase 2 output — structured Learnings with grouped headings and explanations
+- [x] Status section built — line→project map + @@ hunk offsets (working, temporarily removed)
+- [x] Calendar-day windowing — `--days N` from midnight, `--date YYYY-MM-DD`
