@@ -92,6 +92,18 @@
 - `grep -c "keyword1\|keyword2" *.jsonl` counts matching lines per file; the highest count reliably identifies the most concept-dense session
 - Use keyword density as a fast proxy when scanning for a specific teaching session across multiple files of similar size
 
+## [recap] · Rule · Queue parser must validate date format — comment lines with pipes are silently treated as entries
+> 2026-03-13 · source: claude-one-digest
+- `Format: \`YYYY-MM-DD | <project> | <description>\`` in queue.md has two `|` characters — parsed as a 3-part entry; `ingest(date="Format: \`YYYY-MM-DD")` crashes with "Invalid date format"
+- Any header or comment line containing `|` will be parsed as an entry without a date check
+- Always validate the date field matches `YYYY-MM-DD` (len=10, dashes at positions 4 and 7) before processing; skip silently otherwise
+
+## [llm] · Guideline · Strip trailing `(none)` from LLM responses that mix content with a fallback marker
+> 2026-03-13 · source: claude-one-digest
+- Prompt said "If no concepts, output: (none)" — Claude sometimes appends `(none)` at the end of a response that already contains valid content, treating it as a section terminator
+- The stray `(none)` appears in the saved file and confuses readers
+- Strip trailing `(none)` after receiving the response: `if result.endswith("(none)"): result = result[:-len("(none)")].rstrip()`
+
 ## [recap] · Rule · Read Q&A pairs, not just assistant turns — questions are what make analogies interpretable
 > 2026-03-13 · source: claude-one-digest
 - A high-quality session recap requires reading both the user question ("is my computer a server?") and the full assistant answer — the question gives the analogy its context and makes the explanation memorable

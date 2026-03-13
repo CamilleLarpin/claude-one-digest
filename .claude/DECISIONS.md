@@ -73,6 +73,18 @@
 - **Date**: 2026-03-13
 - **Status**: active
 
+## [recap] Session recap uses a single Claude call — not two-phase
+- **Decision**: one Claude Haiku call per session: extract qualifying questions, group by concept, re-explain, include triggering question and analogies — all in one prompt
+- **Rationale**: two-phase pipeline (digest.py) was built for cross-session deduplication; single-session recap has no deduplication need; one call is simpler, faster, and cheaper; quality validated on Mar 12 gold standard
+- **Date**: 2026-03-13
+- **Status**: active
+
+## [recap] Noise filtering — pattern-based, turn-level
+- **Decision**: filter turns where text starts with `/`, or contains `<command-name>` / `<command-message>` / `<local-command-caveat>` XML tags; skip turns < 5 chars
+- **Rationale**: ritual noise (slash commands, CLI invocations injected by Claude Code) inflates the transcript and confuses the model; tool blocks already stripped by `extract_text()`; pattern matching is deterministic and requires no LLM call
+- **Date**: 2026-03-13
+- **Status**: active
+
 ## [ingest] Primary Claude Code source — `~/.claude/projects/` only
 - **Decision**: ingest from `~/.claude/projects/**/*.jsonl`; ignore `~/.claude/history.jsonl`
 - **Rationale**: `projects/` contains full transcripts (user + assistant); `history.jsonl` is user prompts only, truncated, and 106/108 sessions are already covered by `projects/`; adding it would require deduplication for no quality gain
