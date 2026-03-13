@@ -9,11 +9,16 @@
 
 ## Problem Space
 
-**Pain point**: Knowledge and progress from Claude sessions evaporate — there is no unified record of what was learned or achieved across three interfaces (Claude Code, Claude Desktop, Claude.ai).
+**Pain point**: Sessions with Claude that contain deep conceptual teaching — new mental models, analogies, explanations built step by step — disappear completely when the session ends. There's no way to review, reinforce, or look up what was learned.
 
-**Current state**: Three separate interfaces produce invisible output. Sessions end, learnings disappear. No way to answer "what did I learn this week?" or "what did I actually ship?" without manually recalling each session. Interfaces overlap — designing happens in Claude Code sessions, not just on the web — so source ≠ category.
+**Validated user need** (2026-03-13 design step-back):
+- Camille does not go back to raw sessions — too noisy, too long
+- She wants to review a session recap the evening after or next morning, and reference it weeks later ("how did Docker layer caching work again?")
+- A daily/weekly push would become noise she ignores — on demand is the right model
+- Only sessions where Claude explains concepts are worth processing — not bug fixes, not architecture-only sessions
+- Analogies are critical to memory retention — the recap must preserve the exact analogies from the conversation, not substitute generic explanations
 
-**Desired state**: On-demand (later: automatic) digest that surfaces two distinct analytical lenses — *Learnings* (new knowledge, concepts, corrections) and *Achievements* (decisions made, things shipped, things moved forward) — stored historically so past digests are browsable.
+**Desired state**: When a session teaches something real, Camille flags it at `/end-of-session`. A readable recap is generated and stored. She can review it when she wants and find it when she needs it.
 
 ---
 
@@ -77,36 +82,34 @@
 
 ## Success Criteria
 
-- [ ] Running `digest.py` with no export ZIPs present produces a useful digest from Claude Code history alone
-- [ ] When an export ZIP is present in `data/imports/`, it is merged into the same digest without duplication
-- [ ] Each digest is stored in `data/digests/` and browsable as plain Markdown
-- [ ] Learnings and Achievements are surfaced as two distinct, non-overlapping sections
-- [ ] The digest covers a configurable time window (default: last 24h)
+- [ ] Session recap matches gold standard quality: concepts grouped, analogies preserved, plain-language re-explanation, triggering question included
+- [ ] `python digest.py --queue` processes all entries in `data/queue.md` and saves one `.md` per session to `data/digests/`
+- [ ] Output is readable as plain Markdown, browsable by project/date
+- [ ] Gold standard test: Mar 12 audio-intelligence-pipeline session recap matches quality of manually-produced recap from 2026-03-13
 
 ---
 
 ## Use Cases
 
-### UC1 — End-of-day recap (on demand)
+### UC1 — Session recap (primary, building now)
 **Actor**: Camille
+**Trigger**: After a teaching-heavy session, flags it via `/end-of-session` step 3 → written to `data/queue.md`
 **Flow**:
-1. Runs `./digest.sh` (or `python digest.py`) from terminal
-2. Script reads `~/.claude/history.jsonl` + any ZIPs in `data/imports/` for the last 24h
-3. Normalizes to unified schema, filters by time window
-4. Sends grouped summaries to Claude API with digest prompt
-5. Prints Markdown digest to terminal
-6. Saves digest to `data/digests/YYYY-MM-DD.md`
-**Expected output**: A concise Markdown digest with two sections — what was learned (new knowledge, corrections, concepts) and what was achieved (decisions, shipped things, progress made)
+1. Runs `python digest.py --queue` from terminal
+2. Script reads `data/queue.md`, finds matching `.jsonl` by date + project
+3. Extracts Q&A turns (strips ritual noise: `/start`, `/commit-push`, tool calls, system blocks)
+4. One Claude Haiku call with gold-standard prompt
+5. Saves to `data/digests/YYYY-MM-DD_project-slug.md`
+**Expected output**: Concept-grouped recap with plain-language re-explanations preserving the original analogies from the conversation
 
-### UC2 — Weekly review with web/desktop conversations
+### UC2 — Reference lookup (on demand)
 **Actor**: Camille
-**Flow**:
-1. Exports Claude.ai/Desktop ZIP from Settings → Privacy
-2. Drops ZIP into `data/imports/`
-3. Runs `./digest.sh --days 7`
-4. Script merges Claude Code history + exported conversations for the last 7 days
-5. Produces and stores a weekly digest
-**Expected output**: Same format as UC1 but covering a broader window and richer source mix
+**Trigger**: "How did Docker layer caching work again?"
+**Flow**: Opens `data/digests/`, searches by project or concept name
+**Expected output**: Finds the relevant recap, reads the section
+
+### UC3 — Daily/weekly rollup (deferred)
+Will be addressed once UC1 is validated. Likely: aggregate `data/queue.md` entries by day/week into a rolled-up view.
 
 ---
 

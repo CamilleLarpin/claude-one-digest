@@ -8,13 +8,26 @@
 ---
 
 ## Current State
-**As of**: 2026-03-12
-Digest module built and working end-to-end. Outputs to stdout and saves to `data/digests/`. Prompt quality iterated — two-section format (Status + Learnings) with calendar-day windowing and `--date` flag.
+**As of**: 2026-03-13
+Pivoted from daily digest to per-session recap as primary output. Gold standard established from Mar 12 audio-intelligence-pipeline DevOps session (0b6d250f). Queue mechanism in place. Session recap generator not yet built.
+
+Previous daily digest pipeline (Status + Learnings, Groq → Claude Haiku) is on hold pending session recap validation.
 
 ## Architecture
-Two-phase Groq pipeline:
-1. **Status** — one call per project group → high-level achievements (max 2 bullets)
-2. **Learnings** — one cross-project call → non-obvious concepts Camille engaged with
+Two distinct outputs (currently only recap is active):
+
+**Session recap** (primary, building now):
+- Triggered by `--queue` or `--session <path>`
+- Reads flagged session `.jsonl` → extracts Q&A turns (strips ritual noise) → one Claude Haiku call → saves `data/digests/YYYY-MM-DD_project-slug.md`
+- Format: concept groups + re-explanation preserving original analogies + triggering question
+
+**Daily digest** (on hold):
+- Two-phase Claude Haiku pipeline: Status (per-project) + Learnings (cross-project)
+- Paused — will resume once session recap is validated
+
+**Flagging mechanism**:
+- `/end-of-session` step 3 appends to `data/queue.md`: `YYYY-MM-DD | <project> | <description>`
+- `--queue` mode reads queue, resolves to `.jsonl` by date + project, processes, marks done
 
 Ingest: `~/.claude/projects/**/*.jsonl` → normalized `Session` / `Turn` objects → grouped by project → chunked at 10k chars.
 
