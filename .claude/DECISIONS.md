@@ -43,11 +43,29 @@
 - **Date**: 2026-03-12
 - **Status**: Status section temporarily removed pending Learnings quality validation; will be re-added once Learnings is stable
 
+## [digest] Per-session recap as primary output — daily/weekly deferred
+- **Decision**: build per-session recap first; daily and weekly rollup deferred until recap quality is validated
+- **Rationale**: design step-back (2026-03-13) revealed the real need is retrieval and review of specific teaching sessions, not a pushed daily summary; Camille explicitly said daily/weekly would become noise she ignores; recap-first unblocks the daily/weekly rollup naturally once it exists
+- **Date**: 2026-03-13
+- **Status**: active — supersedes "Two-section format — Status + Learnings" as primary build target
+
+## [digest] On-demand trigger only — no cron, no push
+- **Decision**: no scheduled runs; Camille triggers recap generation explicitly (via `--queue` or `--session`) after flagging a session at `/end-of-session`
+- **Rationale**: Camille explicitly said she worries a daily/weekly would force her and she wouldn't do it; on-demand matches her use pattern (review evening after or next morning, reference later); aligns with global principle "user label as inclusion rule — human decides, AI executes"
+- **Date**: 2026-03-13
+- **Status**: active
+
+## [digest] Gold standard format — concept + re-explanation preserving original analogies
+- **Decision**: session recaps group by concept (not chronologically), re-explain each concept in plain language, preserve the exact analogies from the conversation, and include the question that triggered the explanation
+- **Rationale**: gold standard established from Mar 12 DevOps session — quality came from reading actual Q&A exchanges and preserving analogies ("knock at a door", "bouncer at the entrance", "envelope", "two guards"); Camille confirmed analogies help memory retention; keyword extraction or concept lists rejected as insufficient
+- **Date**: 2026-03-13
+- **Status**: active
+
 ## [learnings] Two-phase extraction pipeline
 - **Decision**: Phase 1 extracts learning questions per session (one Claude call per session, up to 40k chars); Phase 2 groups, deduplicates, and writes a short explanation per concept (one call, max 2000 tokens). Output is a structured summary with headings and explanations Camille can re-read.
 - **Rationale**: single-call hit token limits; per-session extraction with Claude is reliable; Phase 2 explanation format chosen over concept-names-only after concept-only output was deemed insufficient by Camille
 - **Date**: 2026-03-13
-- **Status**: active — under review; gold standard to be defined from Mar 12 Docker/FastAPI session before finalising
+- **Status**: on hold — superseded by per-session recap as primary build target; will resume once recap is validated
 
 ## [learnings] Python post-filter before Phase 2
 - **Decision**: filter Phase 1 output in Python before sending to Phase 2 — remove slash commands, path-like strings, entries < 8 chars, known noise tokens (ls, cat, echo, etc.)
