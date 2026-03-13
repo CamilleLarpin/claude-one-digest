@@ -85,3 +85,15 @@
 - Some sessions show 5000+ minute duration because Claude Code was left open without activity
 - Duration cannot be used as a signal for session weight or importance
 - Use `ts_start` for grouping and filtering; ignore duration entirely in digest logic
+
+## [ingest] · Guideline · Identify high-signal sessions by keyword density, not file size
+> 2026-03-13 · source: claude-one-digest
+- File size (KB) alone doesn't indicate teaching content — a large session may be mostly tool output and ritual noise
+- `grep -c "keyword1\|keyword2" *.jsonl` counts matching lines per file; the highest count reliably identifies the most concept-dense session
+- Use keyword density as a fast proxy when scanning for a specific teaching session across multiple files of similar size
+
+## [recap] · Rule · Read Q&A pairs, not just assistant turns — questions are what make analogies interpretable
+> 2026-03-13 · source: claude-one-digest
+- A high-quality session recap requires reading both the user question ("is my computer a server?") and the full assistant answer — the question gives the analogy its context and makes the explanation memorable
+- Extracting only assistant turns produces correct facts but loses the "why did this concept come up" framing that anchors memory
+- Always include both roles when building the recap input; filter noise by content pattern, not by role
