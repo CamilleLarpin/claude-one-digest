@@ -8,13 +8,18 @@
 ---
 
 ## Now
-- [ ] **REVIEW FROM SCRATCH** — Take a step back. Find the March 12 audio-intelligence-pipeline sessions where Camille learned Docker, ports, FastAPI, Hetzner deployment. Read those conversations. Use them as the gold standard for what the output should look like: what questions were asked, what was learned, how it should be summarised. Redesign the prompts and output format from that example, not from iteration on broken output.
+- [ ] **Build `src/session_recap.py`** — plan defined (2026-03-13):
+  1. Read `data/queue.md`, resolve each entry to the matching `.jsonl` (by date + project slug)
+  2. Extract Q&A turns — strip ritual noise (lines with `/start`, `/commit-push`, `command-name`, `command-message`, `Caveat:`, tool call/result blocks)
+  3. One Claude Haiku call with gold-standard prompt: group by concept, preserve analogies, re-explain in plain language, include triggering question
+  4. Save to `data/digests/YYYY-MM-DD_project-slug.md`
+  5. Mark processed entries done in `queue.md`
+  6. Test against Mar 12 audio-intelligence-pipeline session — compare against manually-produced gold standard
 
 ## Next
-- [ ] Re-add Status section once Learnings is validated (currently removed)
 - [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
 - [ ] Add Claude.ai/Desktop ZIP ingest once first export is available
-- [ ] Consider cron automation (Phase 2) — daily digest at end of day
+- [ ] Daily/weekly rollup — deferred until session recap is validated
 
 ## Blocked
 (none)
