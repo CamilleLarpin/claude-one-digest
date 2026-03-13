@@ -96,9 +96,26 @@ def load_sessions_from_file(jsonl_path: Path) -> dict[str, Session]:
     return sessions
 
 
-def ingest(days: int) -> list[Session]:
-    """Load all Claude Code sessions within the last `days` days."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+def ingest(days: int = 1, date: str | None = None) -> list[Session]:
+    """Load Claude Code sessions for a time window.
+
+    - date="YYYY-MM-DD": sessions from midnight to midnight of that specific day
+    - days=N: sessions from midnight N calendar days ago until now
+    """
+    now_local = datetime.now().astimezone()
+
+    if date:
+        try:
+            d = datetime.strptime(date, "%Y-%m-%d").astimezone()
+        except ValueError:
+            print(f"[error] Invalid date format '{date}' — expected YYYY-MM-DD", file=sys.stderr)
+            sys.exit(1)
+        cutoff_start = d.replace(hour=0, minute=0, second=0, microsecond=0)
+        cutoff_end = cutoff_start + timedelta(days=1)
+    else:
+        cutoff_start = (now_local - timedelta(days=days - 1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        cutoff_end = None  # no upper bound
+
     all_sessions: dict[str, Session] = {}
 
     if not PROJECTS_DIR.exists():
@@ -108,10 +125,10 @@ def ingest(days: int) -> list[Session]:
     for jsonl_path in PROJECTS_DIR.glob("*/*.jsonl"):
         file_sessions = load_sessions_from_file(jsonl_path)
         for sid, session in file_sessions.items():
-            if session.ts_end >= cutoff:
-                # Deduplicate: same session_id may appear in multiple project folders (rare)
-                if sid not in all_sessions:
-                    all_sessions[sid] = session
+            if session.ts_end >= cutoff_start:
+                if cutoff_end is None or session.ts_start < cutoff_end:
+                    if sid not in all_sessions:
+                        all_sessions[sid] = session
 
     return sorted(all_sessions.values(), key=lambda s: s.ts_start)
 
@@ -137,8 +154,9 @@ def print_summary(sessions: list[Session]) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ingest Claude Code sessions")
-    parser.add_argument("--days", type=int, default=1, help="Look back N days (default: 1)")
+    parser.add_argument("--days", type=int, default=1, help="Look back N calendar days (default: 1 = today)")
+    parser.add_argument("--date", type=str, default=None, help="Specific date (YYYY-MM-DD)")
     args = parser.parse_args()
 
-    sessions = ingest(days=args.days)
+    sessions = ingest(days=args.days, date=args.date)
     print_summary(sessions)
