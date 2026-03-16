@@ -104,6 +104,16 @@
 - The stray `(none)` appears in the saved file and confuses readers
 - Strip trailing `(none)` after receiving the response: `if result.endswith("(none)"): result = result[:-len("(none)")].rstrip()`
 
+## [prompt] · Rule · LLM outputs reasoning after (none) unless explicitly forbidden
+> 2026-03-16 · source: claude-one-digest
+- Prompt said "output: (none)" — model output `(none)\n\n**Reasoning:** ...` explaining why no concepts qualified; the reasoning block ends up in the saved file
+- Check `result.startswith("(none)")` not just `result == "(none)"` to catch this; also add "output ONLY (none), no reasoning, no explanation" to the prompt
+
+## [recap] · Guideline · Cache recaps by date — skip API call if file already exists
+> 2026-03-16 · source: claude-one-digest
+- Re-running `digest` on the same date regenerates from the API every time — wasteful and non-deterministic (LLM may classify differently on each call)
+- Check if `data/digests/YYYY-MM-DD.md` exists before calling the API; expose `--force` to regenerate explicitly
+
 ## [recap] · Rule · Read Q&A pairs, not just assistant turns — questions are what make analogies interpretable
 > 2026-03-13 · source: claude-one-digest
 - A high-quality session recap requires reading both the user question ("is my computer a server?") and the full assistant answer — the question gives the analogy its context and makes the explanation memorable
