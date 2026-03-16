@@ -1,15 +1,17 @@
 """
-Session recap generator — processes flagged sessions from data/queue.md
+Session recap generator — processes sessions flagged in data/learning_log.md
 
 Usage:
-    python src/session_recap.py --queue
-    python src/session_recap.py --queue --dry-run
-    python src/session_recap.py --queue --verbose
+    python src/session_recap.py --date 2026-03-13
+    python src/session_recap.py --date 2026-03-13 --dry-run
+    python src/session_recap.py --date 2026-03-13 --verbose
+    python src/session_recap.py --date today
 """
 
 import argparse
 import os
 import sys
+from datetime import date as date_type
 from pathlib import Path
 
 import anthropic
@@ -26,26 +28,25 @@ MODEL = "claude-haiku-4-5-20251001"
 MAX_TURN_CHARS = 600
 MAX_SESSION_CHARS = 40_000
 
-QUEUE_PATH = Path(__file__).parent.parent / "data" / "queue.md"
+LEARNING_LOG_PATH = Path(__file__).parent.parent / "data" / "learning_log.md"
 DIGESTS_DIR = Path(__file__).parent.parent / "data" / "digests"
 
 RECAP_PROMPT = """\
-You are writing a session recap for Camille based on a Claude Code session transcript.
+You are writing a learning recap for Camille based on a Claude Code session transcript.
 
-Your goal: extract every concept Camille explicitly asked to have explained, and write a clear re-explanation for each.
+Your goal: extract only generic, transferable technical concepts that Camille asked to have explained — things she could apply in any future project, regardless of context.
 
-A qualifying question looks like:
-- "What is X?" / "What are X?"
-- "How does X work?" / "How do I understand X?"
-- "What's the difference between X and Y?"
-- "Why do we use X instead of Y?"
-- "Can you explain X?"
-- A short follow-up question on a concept just explained
+A concept qualifies if:
+- It is a general technical concept (how a tool, protocol, or system works)
+- The explanation would be useful to any developer, not just in this specific project
+- Camille explicitly asked "What is X?", "How does X work?", "What's the difference between X and Y?", "Why do we use X instead of Y?", or asked a follow-up on a concept just explained
 
-NOT qualifying:
-- Action requests ("Create X", "Fix X", "Update X")
-- Questions about what Claude just did
-- Meta questions about the session or workflow
+A concept does NOT qualify if:
+- It is project-specific analysis ("which project should I choose", "how should I structure this feature")
+- It is a project decision or recommendation ("use X instead of Y for this project")
+- It is a question about what Claude just did or produced
+- It is an action request ("create X", "fix X", "update X")
+- The explanation only makes sense in the context of this specific project or session
 
 Rules:
 - Group related concepts under a shared heading
@@ -60,7 +61,8 @@ Format:
 > Q: Camille's exact question
 Plain-language explanation. Include the analogy from the conversation here.
 
-If no concepts were taught, output: (none)
+If no qualifying concepts were found, output exactly: (none)
+Do not explain why. Do not add reasoning. Output only (none) and nothing else.
 
 --- SESSION TRANSCRIPT ---
 {content}
@@ -68,33 +70,23 @@ If no concepts were taught, output: (none)
 """
 
 
-def parse_queue(path: Path) -> list[tuple[int, str, str, str]]:
-    """Return (line_index, date, project_slug, description) for each unprocessed entry."""
+def parse_learning_log(path: Path, date: str) -> list[tuple[str, str, str]]:
+    """Return (date, project_slug, description) for entries matching the given date."""
     entries = []
     if not path.exists():
         return entries
-    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+    for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
-        if not stripped or stripped.startswith("#") or stripped.startswith("---") or stripped.startswith("[x]"):
+        if not stripped or stripped.startswith("#") or stripped.startswith("---"):
             continue
         parts = [p.strip() for p in stripped.split("|")]
         if len(parts) != 3:
             continue
-        date, project, description = parts
-        # Validate date looks like YYYY-MM-DD before treating as a real entry
-        if len(date) != 10 or date[4] != "-" or date[7] != "-":
+        entry_date, project, description = parts
+        if entry_date != date:
             continue
-        entries.append((i, date, project, description))
+        entries.append((entry_date, project, description))
     return entries
-
-
-def mark_done(path: Path, line_indices: list[int]) -> None:
-    """Prefix processed lines with [x] in queue.md."""
-    lines = path.read_text(encoding="utf-8").splitlines()
-    for i in line_indices:
-        if i < len(lines) and not lines[i].startswith("[x]"):
-            lines[i] = "[x] " + lines[i]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def is_noise(text: str) -> bool:
@@ -136,10 +128,9 @@ def process_entry(
     project: str,
     description: str,
     client: anthropic.Anthropic,
-    dry_run: bool,
     verbose: bool,
-) -> bool:
-    """Process one queue entry. Returns True on success (including no-concept sessions)."""
+) -> str | None:
+    """Process one learning log entry. Returns recap text on success, None if no concepts found."""
     print(f"[recap] {date} | {project}", file=sys.stderr)
 
     sessions = ingest(date=date)
@@ -147,7 +138,7 @@ def process_entry(
 
     if not matching:
         print(f"  [warn] No sessions found for {project} on {date}", file=sys.stderr)
-        return False
+        return None
 
     total_turns = sum(len(s.turns) for s in matching)
     print(f"  Found {len(matching)} session(s), {total_turns} turns", file=sys.stderr)
@@ -158,42 +149,36 @@ def process_entry(
         print(f"\n--- TRANSCRIPT PREVIEW ---\n{preview}\n{'...' if len(transcript) > 2000 else ''}", file=sys.stderr)
 
     result = call_claude(RECAP_PROMPT, transcript, client)
-    # Strip trailing (none) that Claude sometimes appends after listing concepts
-    result = result.rstrip()
-    if result.endswith("(none)"):
-        result = result[:-len("(none)")].rstrip()
+    result = result.strip()
+    # Handle (none) whether it appears alone, at start, or at end
+    if result.startswith("(none)") or result.endswith("(none)") or result == "(none)":
+        result = ""
 
     if verbose:
         print(f"\n--- RECAP ---\n{result}\n", file=sys.stderr)
 
-    if result.strip() == "(none)" or not result.strip():
-        print("  [info] No qualifying concepts found — skipping save", file=sys.stderr)
-        return True
+    if not result.strip():
+        print("  [info] No qualifying concepts found", file=sys.stderr)
+        return None
 
-    header = f"# Session Recap — {date} · {project}\n_{description}_\n\n---\n\n"
-    output = header + result
-
-    if dry_run:
-        print(output)
-        return True
-
-    DIGESTS_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = DIGESTS_DIR / f"{date}_{project}.md"
-    out_path.write_text(output, encoding="utf-8")
-    print(f"  Saved → {out_path}", file=sys.stderr)
-    return True
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate session recaps from queue")
-    parser.add_argument("--queue", action="store_true", help="Process all unprocessed entries in data/queue.md")
-    parser.add_argument("--dry-run", action="store_true", help="Print output, do not save or mark done")
+    parser = argparse.ArgumentParser(description="Generate session recaps from learning log")
+    parser.add_argument("--date", type=str, required=True, help="Date to process (YYYY-MM-DD or 'today')")
+    parser.add_argument("--dry-run", action="store_true", help="Print output, do not save")
+    parser.add_argument("--force", action="store_true", help="Regenerate even if recap already exists")
     parser.add_argument("--verbose", action="store_true", help="Print transcript preview and raw recap to stderr")
     args = parser.parse_args()
 
-    if not args.queue:
-        print("[error] Specify --queue", file=sys.stderr)
-        sys.exit(1)
+    target_date = str(date_type.today()) if args.date == "today" else args.date
+
+    out_path = DIGESTS_DIR / f"{target_date}.md"
+    if out_path.exists() and not args.force and not args.dry_run:
+        print(f"[recap] Recap already exists for {target_date} — use --force to regenerate.", file=sys.stderr)
+        print(str(out_path))
+        return
 
     if not ANTHROPIC_API_KEY:
         print("[error] ANTHROPIC_API_KEY not set — add it to .env", file=sys.stderr)
@@ -201,24 +186,40 @@ def main():
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-    entries = parse_queue(QUEUE_PATH)
+    entries = parse_learning_log(LEARNING_LOG_PATH, target_date)
     if not entries:
-        print("[recap] Queue is empty or all entries already processed.", file=sys.stderr)
+        print(f"[recap] No entries in learning_log.md for {target_date}.", file=sys.stderr)
         sys.exit(0)
 
-    print(f"[recap] {len(entries)} entries to process", file=sys.stderr)
+    # Group by (date, project) — multiple entries for same project are merged into one recap
+    groups: dict[tuple[str, str], list[str]] = {}
+    for entry_date, project, description in entries:
+        key = (entry_date, project)
+        groups.setdefault(key, []).append(description)
 
-    done_indices = []
-    for line_idx, date, project, description in entries:
-        ok = process_entry(date, project, description, client, dry_run=args.dry_run, verbose=args.verbose)
-        if ok and not args.dry_run:
-            done_indices.append(line_idx)
+    print(f"[recap] {len(groups)} project(s) to process for {target_date}", file=sys.stderr)
 
-    if done_indices and not args.dry_run:
-        mark_done(QUEUE_PATH, done_indices)
-        print(f"[recap] Marked {len(done_indices)} entries done in queue.md", file=sys.stderr)
+    sections = []
+    for (entry_date, project), descriptions in groups.items():
+        recap_text = process_entry(entry_date, project, " · ".join(descriptions), client, verbose=args.verbose)
+        if recap_text:
+            sections.append(f"## {project}\n\n{recap_text}")
 
-    print("[recap] Done.", file=sys.stderr)
+    if not sections:
+        print("[recap] Done. No qualifying concepts found.", file=sys.stderr)
+        return
+
+    combined = f"# Learning Recap — {target_date}\n\n---\n\n" + "\n\n---\n\n".join(sections)
+
+    if args.dry_run:
+        print(combined)
+        return
+
+    DIGESTS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = DIGESTS_DIR / f"{target_date}.md"
+    out_path.write_text(combined, encoding="utf-8")
+    print(f"[recap] Done. Saved → {out_path}", file=sys.stderr)
+    print(str(out_path))
 
 
 if __name__ == "__main__":

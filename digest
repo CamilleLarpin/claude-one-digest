@@ -1,0 +1,41 @@
+#!/bin/bash
+# digest [date] [--force] — generate and open session recaps for a given date
+# date: YYYY-MM-DD or 'today' (default: today)
+# --force: regenerate even if recap already exists
+
+set -e
+
+DATE=${1:-today}
+FORCE=""
+for arg in "$@"; do
+  if [ "$arg" = "--force" ]; then FORCE="--force"; fi
+  if [[ "$arg" == 20[0-9][0-9]-* ]] || [ "$arg" = "today" ]; then DATE="$arg"; fi
+done
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+cd "$SCRIPT_DIR"
+
+if [ "$DATE" = "today" ]; then
+  DISPLAY_DATE=$(date +%Y-%m-%d)
+else
+  DISPLAY_DATE="$DATE"
+fi
+
+echo "Processing learning log for $DISPLAY_DATE..."
+
+# stderr → terminal (progress), stdout → variable (saved file path)
+SAVED=$(python src/session_recap.py --date "$DATE" $FORCE)
+
+if [ -z "$SAVED" ]; then
+  echo ""
+  echo "No lessons found for $DISPLAY_DATE."
+  exit 0
+fi
+
+echo ""
+while IFS= read -r f; do
+  name=$(basename "$f")
+  echo "Opening $name"
+  open "$f"
+done <<< "$SAVED"
