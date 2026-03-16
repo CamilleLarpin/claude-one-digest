@@ -8,25 +8,25 @@
 ---
 
 ## Now
-- [ ] Validate Mar 12 recap quality against gold standard (manual review) — content ✅, format renders well in preview
+- [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
 
 ## Next
-- [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
-- [ ] Add Claude.ai/Desktop ZIP ingest once first export is available
-- [ ] Daily/weekly rollup — deferred until session recap is validated
+- [ ] Daily/weekly rollup — future phase, not planned
+
+## Out of scope
+- Claude.ai/Desktop ZIP ingest — future phase, deprioritised
 
 ## Blocked
 (none)
 
 ## Done (recent — clear periodically)
-- [x] Built `src/session_recap.py` — queue parser, noise filter, Claude Haiku single-call, save + mark done
-- [x] Switched from Groq to Claude API (claude-haiku-4-5-20251001) for Learnings extraction
-- [x] Removed Status section temporarily — focus on Learnings quality first
-- [x] Fixed missing `{content}` placeholders in EXTRACT_PROMPT and MERGE_PROMPT
-- [x] Raised session char cap 8000 → 40000 — covers full sessions (Docker content was at char 11593)
-- [x] Raised MERGE max_tokens 400 → 2000 — output was being cut mid-response
-- [x] Fixed format example — replaced `- ConceptName` placeholder with real example to prevent literal output
-- [x] Validated Phase 1 on Docker/FastAPI session — correct questions extracted
-- [x] Validated Phase 2 output — structured Learnings with grouped headings and explanations
-- [x] Status section built — line→project map + @@ hunk offsets (working, temporarily removed)
-- [x] Calendar-day windowing — `--days N` from midnight, `--date YYYY-MM-DD`
+- [x] End-to-end validated: digest 2026-03-13 → 1 file, correct content, opens cleanly
+- [x] Caching — skips API call if recap already exists; `--force` to regenerate
+- [x] One file per day (not per project) — project sections within the file
+- [x] Same-project same-day entries merged — descriptions combined, one API call
+- [x] Prompt tightened — only generic transferable concepts qualify, not project decisions
+- [x] Fixed (none) + reasoning block leak — model no longer outputs reasoning on empty sessions
+- [x] Replaced queue.md with learning_log.md — permanent record, no done-marking
+- [x] Created /digest Claude Code command — flags current session to learning log
+- [x] Created digest shell script + alias — `digest [date]` generates and opens recaps
+- [x] Removed digest step from /end-of-session — flagging is now a separate /digest command
