@@ -37,12 +37,6 @@
 - **Date**: 2026-03-12
 - **Status**: active
 
-## [digest] Two-section format — Status + Learnings
-- **Decision**: digest has two sections: Status (per-project achievements, max 2 bullets) and Learnings (cross-project concepts Camille engaged with)
-- **Rationale**: separates "what got done" from "what was learned" — different audiences for each (project tracking vs personal knowledge); cross-project learnings require a single pass over all sessions, not per-project calls
-- **Date**: 2026-03-12
-- **Status**: Status section temporarily removed pending Learnings quality validation; will be re-added once Learnings is stable
-
 ## [digest] Per-session recap as primary output — daily/weekly deferred
 - **Decision**: build per-session recap first; daily and weekly rollup deferred until recap quality is validated
 - **Rationale**: design step-back (2026-03-13) revealed the real need is retrieval and review of specific teaching sessions, not a pushed daily summary; Camille explicitly said daily/weekly would become noise she ignores; recap-first unblocks the daily/weekly rollup naturally once it exists
@@ -61,18 +55,6 @@
 - **Date**: 2026-03-13
 - **Status**: active
 
-## [learnings] Two-phase extraction pipeline
-- **Decision**: Phase 1 extracts learning questions per session (one Claude call per session, up to 40k chars); Phase 2 groups, deduplicates, and writes a short explanation per concept (one call, max 2000 tokens). Output is a structured summary with headings and explanations Camille can re-read.
-- **Rationale**: single-call hit token limits; per-session extraction with Claude is reliable; Phase 2 explanation format chosen over concept-names-only after concept-only output was deemed insufficient by Camille
-- **Date**: 2026-03-13
-- **Status**: on hold — superseded by per-session recap as primary build target; will resume once recap is validated
-
-## [learnings] Python post-filter before Phase 2
-- **Decision**: filter Phase 1 output in Python before sending to Phase 2 — remove slash commands, path-like strings, entries < 8 chars, known noise tokens (ls, cat, echo, etc.)
-- **Rationale**: 8b model doesn't reliably apply complex DROP rules in the merge prompt; Python filter is deterministic and free; alternatives: stronger model for Phase 2 (risks TPD exhaustion), accepting noise (degrades digest quality)
-- **Date**: 2026-03-13
-- **Status**: active
-
 ## [recap] Session recap uses a single Claude call — not two-phase
 - **Decision**: one Claude Haiku call per session: extract qualifying questions, group by concept, re-explain, include triggering question and analogies — all in one prompt
 - **Rationale**: two-phase pipeline (digest.py) was built for cross-session deduplication; single-session recap has no deduplication need; one call is simpler, faster, and cheaper; quality validated on Mar 12 gold standard
@@ -83,6 +65,36 @@
 - **Decision**: filter turns where text starts with `/`, or contains `<command-name>` / `<command-message>` / `<local-command-caveat>` XML tags; skip turns < 5 chars
 - **Rationale**: ritual noise (slash commands, CLI invocations injected by Claude Code) inflates the transcript and confuses the model; tool blocks already stripped by `extract_text()`; pattern matching is deterministic and requires no LLM call
 - **Date**: 2026-03-13
+- **Status**: active
+
+## [recap] One file per day — projects as sections
+- **Decision**: `digest [date]` produces one file `data/digests/YYYY-MM-DD.md`; projects appear as `## project` sections within it
+- **Rationale**: Camille wants a daily review, not per-project files; one file = one open = one read; multiple files per day create friction and visual noise
+- **Date**: 2026-03-16
+- **Status**: active — supersedes per-project file naming
+
+## [recap] Flagging via /digest command, not /end-of-session
+- **Decision**: `/digest` is a standalone Claude Code command that appends to `data/learning_log.md`; the digest step is removed from `/end-of-session`
+- **Rationale**: flagging is a separate intent from session wrap-up; decoupling lets Camille flag mid-session or not at all; `/end-of-session` stays focused on docs/lessons/tracker
+- **Date**: 2026-03-16
+- **Status**: active
+
+## [recap] Permanent learning log — no done-marking
+- **Decision**: `data/learning_log.md` keeps all entries permanently; no `[x]` marking; entries are a record, not a task list
+- **Rationale**: the log is a historical artifact — "sessions where Camille learnt a great deal from Claude"; marking done would imply entries are consumed and loses the archive value; idempotent regeneration (caching) makes done-marking unnecessary
+- **Date**: 2026-03-16
+- **Status**: active
+
+## [recap] Only generic transferable concepts qualify — project decisions excluded
+- **Decision**: the recap prompt explicitly excludes project-specific analysis, decisions, and recommendations; only concepts a developer could apply in any future project qualify
+- **Rationale**: Camille's feedback — "I want only what I learnt, not decisions I made"; project decisions belong in DECISIONS.md, not in a learning recap; the distinction: would this explanation be useful to any developer regardless of project?
+- **Date**: 2026-03-16
+- **Status**: active
+
+## [recap] Caching — skip regeneration if file exists
+- **Decision**: `session_recap.py` skips the API call if `data/digests/YYYY-MM-DD.md` already exists; `--force` flag overrides
+- **Rationale**: LLM output is non-deterministic — re-running produces different classifications; caching makes the result stable and avoids unnecessary API cost; `--force` covers the explicit regeneration case
+- **Date**: 2026-03-16
 - **Status**: active
 
 ## [ingest] Primary Claude Code source — `~/.claude/projects/` only
