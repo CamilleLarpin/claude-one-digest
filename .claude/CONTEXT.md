@@ -8,49 +8,49 @@
 ---
 
 ## Current State
-**As of**: 2026-03-13
-Pivoted from daily digest to per-session recap as primary output. Gold standard established from Mar 12 audio-intelligence-pipeline DevOps session (0b6d250f). Queue mechanism in place. Session recap generator not yet built.
+**As of**: 2026-03-16
+Session recap generator built and validated. Pipeline is complete: flag → generate → review.
 
-Previous daily digest pipeline (Status + Learnings, Groq → Claude Haiku) is on hold pending session recap validation.
+Daily digest pipeline (`digest.py`, Groq) is dead code — paused indefinitely. Claude.ai/Desktop ingest is out of scope (future phase, not planned).
 
 ## Architecture
-Two distinct outputs (currently only recap is active):
 
-**Session recap** (primary, building now):
-- Triggered by `--queue` or `--session <path>`
-- Reads flagged session `.jsonl` → extracts Q&A turns (strips ritual noise) → one Claude Haiku call → saves `data/digests/YYYY-MM-DD_project-slug.md`
+**Session recap** (primary, active):
+- Triggered by `digest [date]` shell script (defaults to today)
+- Reads `data/learning_log.md` for entries matching the date
+- Resolves `.jsonl` by date + project → extracts Q&A turns (strips ritual noise) → one Claude Haiku call → saves `data/digests/YYYY-MM-DD_project-slug.md`
+- Opens saved files automatically
 - Format: concept groups + re-explanation preserving original analogies + triggering question
 
-**Daily digest** (on hold):
-- Two-phase Claude Haiku pipeline: Status (per-project) + Learnings (cross-project)
-- Paused — will resume once session recap is validated
-
 **Flagging mechanism**:
-- `/end-of-session` step 3 appends to `data/queue.md`: `YYYY-MM-DD | <project> | <description>`
-- `--queue` mode reads queue, resolves to `.jsonl` by date + project, processes, marks done
+- `/digest` Claude Code command — appends to `data/learning_log.md`: `YYYY-MM-DD | <project> | <description>`
+- Entries are permanent — the log is a record of all rich learning sessions
 
-Ingest: `~/.claude/projects/**/*.jsonl` → normalized `Session` / `Turn` objects → grouped by project → chunked at 10k chars.
+Ingest: `~/.claude/projects/**/*.jsonl` → normalized `Session` / `Turn` objects → filtered by date + project.
 
 ## File Structure
 ```
 claude-one-digest/
   .claude/              # context files
   data/
-    digests/            # YYYY-MM-DD.md outputs (gitignored)
-    imports/            # Claude.ai/Desktop ZIPs (gitignored, not yet used)
+    learning_log.md     # permanent log of flagged learning sessions
+    digests/            # YYYY-MM-DD_project.md recap outputs (gitignored)
   src/
     models.py           # Session + Turn dataclasses
     ingest_claude_code.py  # reads ~/.claude/projects/, filters by --days or --date
-    digest.py           # main pipeline: ingest → group → Groq → render → save
-  .env                  # GROQ_API_KEY (gitignored)
+    session_recap.py    # main pipeline: learning_log → ingest → Claude Haiku → save
+    digest.py           # dead code — old Groq pipeline, not used
+  digest                # shell entry point: digest [date]
+  .env                  # ANTHROPIC_API_KEY (gitignored)
   .env.example
   requirements.txt
 ```
 
 ## Key Dependencies
-- `openai>=1.0.0` — Groq API (OpenAI-compatible)
+- `anthropic>=0.18.0` — Claude Haiku API
 - `python-dotenv>=1.0.0`
 
 ## Environment
 - **Dev**: Python 3.12 (pyenv)
-- **Credentials**: `GROQ_API_KEY` in `.env`
+- **Credentials**: `ANTHROPIC_API_KEY` in `.env`
+- **Shell alias**: `alias digest='~/projects/claude-one-digest/digest'` in `.zshrc`
