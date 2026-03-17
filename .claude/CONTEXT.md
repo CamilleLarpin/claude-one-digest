@@ -25,6 +25,7 @@ Daily digest pipeline (`digest.py`, Groq) is dead code — paused indefinitely. 
 **Flagging mechanism**:
 - `/digest` Claude Code command — appends to `data/learning_log.md`: `YYYY-MM-DD | <project> | <description>`
 - Entries are permanent — the log is a record of all rich learning sessions
+- `data/auto_digest_projects.txt` — projects always included without manual flagging (currently: `finances-ezerpin`, `audio-intelligence-pipeline`, `data-engineering-notes`)
 
 Ingest: `~/.claude/projects/**/*.jsonl` → normalized `Session` / `Turn` objects → filtered by date + project.
 
@@ -41,6 +42,7 @@ claude-one-digest/
     session_recap.py    # main pipeline: learning_log → ingest → Claude Haiku → save
     digest.py           # dead code — old Groq pipeline, not used
   digest                # shell entry point: digest [date]
+    data/auto_digest_projects.txt  # projects always included without manual /digest flag
   .env                  # ANTHROPIC_API_KEY (gitignored)
   .env.example
   requirements.txt
