@@ -30,6 +30,7 @@ MAX_SESSION_CHARS = 40_000
 
 LEARNING_LOG_PATH = Path(__file__).parent.parent / "data" / "learning_log.md"
 DIGESTS_DIR = Path(__file__).parent.parent / "data" / "digests"
+AUTO_DIGEST_PATH = Path(__file__).parent.parent / "data" / "auto_digest_projects.txt"
 
 RECAP_PROMPT = """\
 You are writing a learning recap for Camille based on a Claude Code session transcript.
@@ -68,6 +69,13 @@ Do not explain why. Do not add reasoning. Output only (none) and nothing else.
 {content}
 --- END ---
 """
+
+
+def load_auto_digest_projects(path: Path) -> list[str]:
+    """Return project slugs from auto_digest_projects.txt."""
+    if not path.exists():
+        return []
+    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
 
 
 def parse_learning_log(path: Path, date: str) -> list[tuple[str, str, str]]:
@@ -187,15 +195,27 @@ def main():
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
     entries = parse_learning_log(LEARNING_LOG_PATH, target_date)
-    if not entries:
-        print(f"[recap] No entries in learning_log.md for {target_date}.", file=sys.stderr)
-        sys.exit(0)
 
     # Group by (date, project) — multiple entries for same project are merged into one recap
     groups: dict[tuple[str, str], list[str]] = {}
     for entry_date, project, description in entries:
         key = (entry_date, project)
         groups.setdefault(key, []).append(description)
+
+    # Add auto-digest projects (only if they have sessions on that date and aren't already flagged)
+    auto_projects = load_auto_digest_projects(AUTO_DIGEST_PATH)
+    if auto_projects:
+        all_sessions = ingest(date=target_date)
+        auto_projects_with_sessions = {s.project for s in all_sessions if s.project in auto_projects}
+        for project in auto_projects_with_sessions:
+            key = (target_date, project)
+            if key not in groups:
+                groups[key] = ["(auto-digest)"]
+                print(f"[recap] Auto-digest: {project}", file=sys.stderr)
+
+    if not groups:
+        print(f"[recap] No entries for {target_date}.", file=sys.stderr)
+        sys.exit(0)
 
     print(f"[recap] {len(groups)} project(s) to process for {target_date}", file=sys.stderr)
 
