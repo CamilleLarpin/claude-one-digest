@@ -11,6 +11,8 @@
 - [ ] Filter `projects` pseudo-project from digest (sessions run from ~/projects/ root, not a real project)
 
 ## Next
+- [ ] Retroactive tagging — add a way to flag a past session that wasn't tagged at the time (date + project override for `/digest`, or direct manual entry helper)
+- [ ] Project-level auto-digest — config list of projects where all sessions are automatically included in the digest pipeline without needing `/digest`
 - [ ] Daily/weekly rollup — future phase, not planned
 
 ## Out of scope

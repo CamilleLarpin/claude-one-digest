@@ -108,8 +108,25 @@
 **Flow**: Opens `data/digests/`, searches by project or concept name
 **Expected output**: Finds the relevant recap, reads the section
 
-### UC3 — Daily/weekly rollup (deferred)
-Will be addressed once UC1 is validated. Likely: aggregate `data/queue.md` entries by day/week into a rolled-up view.
+### UC3 — Retroactive tagging (planned)
+**Actor**: Camille
+**Trigger**: Realizes a past session was worth digesting but was never flagged
+**Flow**: Runs `/digest` with a date+project override, or adds a line manually to `learning_log.md`
+**Expected output**: Entry added to learning log; `python digest.py` picks it up on the next run
+**Design note**: The `/digest` command currently generates the description from live conversation context — retroactive mode needs either (a) a `--date` + `--project` flag to the command that prompts for a manual description, or (b) a small helper that reads the target `.jsonl` and auto-generates the description from it. Option (b) is cleaner — no manual writing.
+
+### UC4 — `/digest` called mid-conversation (behavior note)
+The description written to `learning_log.md` reflects only what was covered *up to that point* in the session. The actual digest, however, is generated from the full `.jsonl` file — so **all topics from the session will appear in the recap**, not just the pre-`/digest` ones. Calling `/digest` at end-of-session gives the most accurate description. Calling it mid-session is safe but the log description may be incomplete.
+
+### UC5 — Project-level auto-digest (planned)
+**Actor**: Camille
+**Trigger**: Configures a project as "always digest"
+**Flow**: A config file (e.g. `data/auto_digest_projects.txt`) lists project slugs. `digest.py` automatically includes all sessions from those projects within the time window, without requiring a learning log entry.
+**Use case**: Projects where every session is a learning session (e.g. bootcamp projects, new-technology explorations).
+**Design note**: Learning log entries for auto-digest projects are still generated (for the description/searchability), but via the pipeline itself rather than a manual `/digest` call.
+
+### UC6 — Daily/weekly rollup (deferred)
+Will be addressed once UC1 is validated. Likely: aggregate `learning_log.md` entries by day/week into a rolled-up view.
 
 ---
 
