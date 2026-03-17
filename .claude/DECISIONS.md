@@ -85,6 +85,12 @@
 - **Date**: 2026-03-16
 - **Status**: active
 
+## [recap] Auto-digest via config file — no manual flagging for selected projects
+- **Decision**: `data/auto_digest_projects.txt` lists project slugs whose sessions are always included in the recap pipeline without `/digest`; the file is plain text, one slug per line; retroactive (works for any past date)
+- **Rationale**: for high-frequency projects (finances-ezerpin, audio-intelligence-pipeline, data-engineering-notes) requiring `/digest` every session is friction; config file keeps inclusion logic simple, visible, and user-controlled; dedup logic prevents double-processing if a project is also manually flagged
+- **Date**: 2026-03-17
+- **Status**: active
+
 ## [recap] Caching — skip regeneration if file exists
 - **Decision**: `session_recap.py` skips the API call if `data/digests/YYYY-MM-DD.md` already exists; `--force` flag overrides
 - **Rationale**: LLM output is non-deterministic — re-running produces different classifications; caching makes the result stable and avoids unnecessary API cost; `--force` covers the explicit regeneration case
