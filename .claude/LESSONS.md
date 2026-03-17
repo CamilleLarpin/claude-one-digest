@@ -114,6 +114,14 @@
 - Re-running `digest` on the same date regenerates from the API every time — wasteful and non-deterministic (LLM may classify differently on each call)
 - Check if `data/digests/YYYY-MM-DD.md` exists before calling the API; expose `--force` to regenerate explicitly
 
+## [ghostty] · Note · Ghostty tab title overridden by Claude Code's OSC 2 escape — fix via shell integration
+> 2026-03-17 · source: claude-one-digest session — outcome pending test
+- Goal: show the current folder name (e.g. `claude-one-digest`) as the Ghostty window/tab title
+- Attempt 1 (failed): `precmd`/`chpwd` hooks in `.zshrc` sending `\e]2;%1d\a` + `title = ""` in Ghostty config. Works at the shell prompt but Claude Code sends its own `OSC 2` title (`"Claude Code"`) while running, overriding the hook since no prompt is drawn during Claude Code's execution
+- Attempt 2 (pending): removed manual hooks; added `shell-integration = zsh` + `shell-integration-features = title` to `~/.config/ghostty/config`. Ghostty tracks CWD via `OSC 7` (separate from `OSC 2`) and may use it as the title independently of what the running app sets
+- If attempt 2 fails: only remaining options are (a) wrapping the `claude` command to restore the title at exit (fixes it after Claude Code exits, not during), or (b) accepting the limitation
+- → PROMOTE to `LESSONS_ARCHITECTURE.md` as Guideline if attempt 2 is confirmed working
+
 ## [recap] · Rule · Read Q&A pairs, not just assistant turns — questions are what make analogies interpretable
 > 2026-03-13 · source: claude-one-digest
 - A high-quality session recap requires reading both the user question ("is my computer a server?") and the full assistant answer — the question gives the analogy its context and makes the explanation memorable

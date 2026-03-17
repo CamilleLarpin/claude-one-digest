@@ -1,23 +1,17 @@
 # Decisions Archive — claude-one-digest
 
-> Superseded or resolved decisions. Load only if historical context is needed.
+> Superseded or stable decisions moved here to keep DECISIONS.md under 100 lines.
 
 ---
 
-## [digest] Two-section format — Status + Learnings
-- **Decision**: digest has two sections: Status (per-project achievements) and Learnings (cross-project concepts)
-- **Rationale**: separates "what got done" from "what was learned"
-- **Date**: 2026-03-12
-- **Status**: superseded by "Per-session recap as primary output" — Status section removed, Learnings pivoted to per-session recap format
+## [stack] Language — Python script
+- **Decision**: Python CLI script (no framework)
+- **Rationale**: file I/O + JSON parsing + HTTP calls — no orchestration needed; stays consistent with other Python projects in the stack; alternatives: bash (too brittle for JSON), n8n (overkill, no local file access)
+- **Date**: 2026-03-11
+- **Status**: archived — stable, foundational, unlikely to change
 
-## [learnings] Two-phase extraction pipeline
-- **Decision**: Phase 1 extracts learning questions per session; Phase 2 groups, deduplicates, and explains
-- **Rationale**: single-call hit token limits; per-session extraction with Claude is reliable
-- **Date**: 2026-03-13
-- **Status**: on hold — superseded by single-call per-session recap; will resume if daily/weekly rollup is built
-
-## [learnings] Python post-filter before Phase 2
-- **Decision**: filter Phase 1 output in Python before Phase 2 — remove slash commands, path strings, short entries
-- **Rationale**: 8b model doesn't reliably apply DROP rules; Python filter is deterministic
-- **Date**: 2026-03-13
-- **Status**: archived — Phase 2 pipeline not active; filter logic retained in session_recap.py noise filter
+## [ingest] Primary Claude Code source — `~/.claude/projects/` only
+- **Decision**: ingest from `~/.claude/projects/**/*.jsonl`; ignore `~/.claude/history.jsonl`
+- **Rationale**: `projects/` contains full transcripts (user + assistant); `history.jsonl` is user prompts only, truncated, and 106/108 sessions are already covered by `projects/`; adding it would require deduplication for no quality gain
+- **Date**: 2026-03-11
+- **Status**: archived — stable, foundational, unlikely to change

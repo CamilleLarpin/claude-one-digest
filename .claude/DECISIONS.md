@@ -19,12 +19,6 @@
 
 ---
 
-## [stack] Language — Python script
-- **Decision**: Python CLI script (no framework)
-- **Rationale**: file I/O + JSON parsing + HTTP calls — no orchestration needed; stays consistent with other Python projects in the stack; alternatives: bash (too brittle for JSON), n8n (overkill, no local file access)
-- **Date**: 2026-03-11
-- **Status**: active
-
 ## [stack] LLM for digest — Claude Haiku via Anthropic API
 - **Decision**: `claude-haiku-4-5-20251001` via Anthropic API for both Phase 1 and Phase 2
 - **Rationale**: Groq 8b produced noise it couldn't filter and hallucination loops; 70b hit TPD in one session. Claude follows complex extraction instructions reliably. Cost is negligible for a daily personal tool. Groq dropped entirely.
@@ -97,8 +91,3 @@
 - **Date**: 2026-03-16
 - **Status**: active
 
-## [ingest] Primary Claude Code source — `~/.claude/projects/` only
-- **Decision**: ingest from `~/.claude/projects/**/*.jsonl`; ignore `~/.claude/history.jsonl`
-- **Rationale**: `projects/` contains full transcripts (user + assistant); `history.jsonl` is user prompts only, truncated, and 106/108 sessions are already covered by `projects/`; adding it would require deduplication for no quality gain
-- **Date**: 2026-03-11
-- **Status**: active
