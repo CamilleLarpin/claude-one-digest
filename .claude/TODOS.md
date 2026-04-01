@@ -8,6 +8,7 @@
 ---
 
 ## Now
+- [ ] Migrate CONTEXT.md to new format (template: `~/.claude/templates/CONTEXT.template.md`)
 - [ ] Retroactive tagging — add a way to flag a past session that wasn't tagged at the time (date + project override for `/digest`, or direct manual entry helper)
 
 ## Next
